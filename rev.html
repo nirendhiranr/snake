@@ -1,358 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cursor Snake</title>
-  <link rel="icon" type="image/png" href="../icon.png">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@800&display=swap');
+<meta charset="UTF-8">
+<title>GPA Calculator</title>
 
-    :root {
-      --bg: #060a0f;
-      --accent: #00ffc8;
-      --accent2: #ff2d78;
-      --accent3: #ffe600;
-      --glow: 0 0 12px var(--accent), 0 0 40px rgba(0,255,200,0.25);
-      --snake-head: #00ffc8;
-      --snake-body-start: #00ffc8;
-      --snake-body-end: #ff2d78;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: var(--bg);
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      cursor: none;
-      font-family: 'Share Tech Mono', monospace;
-    }
-
-    /* Grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,255,200,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,200,0.04) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Radial vignette */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 40%, #060a0f 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-    }
-
-    /* HUD overlay */
-    #hud {
-      position: fixed;
-      top: 32px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    #hud h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.8rem);
-      letter-spacing: 0.18em;
-      color: var(--accent);
-      text-shadow: var(--glow);
-      text-transform: uppercase;
-    }
-
-    #hud .sub {
-      font-size: 0.72rem;
-      color: rgba(0,255,200,0.45);
-      letter-spacing: 0.3em;
-      margin-top: 4px;
-    }
-
-    /* Length counter */
-    #counter {
-      position: fixed;
-      bottom: 30px;
-      right: 36px;
-      z-index: 10;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.78rem;
-      color: rgba(0,255,200,0.5);
-      letter-spacing: 0.15em;
-      pointer-events: none;
-    }
-
-    #counter span {
-      color: var(--accent);
-      font-size: 1.4rem;
-      display: block;
-      text-shadow: var(--glow);
-      text-align: right;
-    }
-
-    /* Cursor dot */
-    #cursor {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent2);
-      box-shadow: 0 0 10px var(--accent2), 0 0 30px rgba(255,45,120,0.5);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 20;
-      transition: transform 0.1s ease;
-    }
-  </style>
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 420px;
+}
+h2 {
+    text-align: center;
+}
+.subject {
+    display: flex;
+    margin-bottom: 10px;
+}
+.subject input, .subject select {
+    padding: 8px;
+    margin-right: 5px;
+}
+button {
+    padding: 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+.result {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-<canvas id="c"></canvas>
+<div class="container">
+    <h2>GPA Calculator</h2>
 
-<div id="hud">
-  <h1>CURSOR SNAKE</h1>
-  <div class="sub">move your mouse · watch it grow</div>
+    <div id="subjects"></div>
+
+    <button onclick="addSubject()">+ Add Subject</button>
+    <button onclick="calculateGPA()">Calculate GPA</button>
+
+    <div class="result" id="result"></div>
 </div>
 
-<div id="counter">LENGTH<span id="len">0</span></div>
-<div id="cursor"></div>
-
 <script>
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d');
-  const cursorEl = document.getElementById('cursor');
-  const lenEl = document.getElementById('len');
+function addSubject() {
+    let div = document.createElement("div");
+    div.className = "subject";
 
-  let W = canvas.width = window.innerWidth;
-  let H = canvas.height = window.innerHeight;
+    div.innerHTML = `
+        <input type="text" placeholder="Subject">
+        <input type="number" placeholder="Credits" min="1">
+        <select>
+            <option value="10">O (10)</option>
+            <option value="9">A+ (9)</option>
+            <option value="8">A (8)</option>
+            <option value="7">B+ (7)</option>
+            <option value="6">B (6)</option>
+            <option value="5">C (5)</option>
+            <option value="0">F (0)</option>
+        </select>
+    `;
 
-  window.addEventListener('resize', () => {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  });
+    document.getElementById("subjects").appendChild(div);
+}
 
-  // Snake config
-  const SEGMENT_RADIUS = 9;
-  const MIN_DIST = 10;         // distance between segment centers
-  const MAX_LENGTH = 220;      // max segments before tail fades
-  const SPEED = 0.12;          // lerp speed for head chasing cursor
+function calculateGPA() {
+    let subjects = document.querySelectorAll(".subject");
+    let totalCredits = 0;
+    let totalPoints = 0;
 
-  let mouse = { x: W / 2, y: H / 2 };
-  let trail = [{ x: W / 2, y: H / 2 }];
+    subjects.forEach(sub => {
+        let credits = parseFloat(sub.children[1].value);
+        let grade = parseFloat(sub.children[2].value);
 
-  document.addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    cursorEl.style.left = e.clientX + 'px';
-    cursorEl.style.top  = e.clientY + 'px';
-  });
+        if (!isNaN(credits)) {
+            totalCredits += credits;
+            totalPoints += credits * grade;
+        }
+    });
 
-  // Sparks
-  const sparks = [];
-  function addSparks(x, y, color) {
-    for (let i = 0; i < 4; i++) {
-      sparks.push({
-        x, y,
-        vx: (Math.random() - 0.5) * 3,
-        vy: (Math.random() - 0.5) * 3,
-        life: 1,
-        color
-      });
-    }
-  }
+    let gpa = totalCredits ? (totalPoints / totalCredits).toFixed(2) : 0;
 
-  // Color interpolation along body
-  function bodyColor(t) {
-    // t: 0 = head, 1 = tail
-    const r0=0,   g0=255, b0=200;  // #00ffc8
-    const r1=255, g1=45,  b1=120;  // #ff2d78
-    const r = Math.round(r0 + (r1 - r0) * t);
-    const g = Math.round(g0 + (g1 - g0) * t);
-    const b = Math.round(b0 + (b1 - b0) * t);
-    return `rgb(${r},${g},${b})`;
-  }
+    document.getElementById("result").innerText = "GPA: " + gpa;
+}
 
-  // Head position (smoothly interpolated)
-  let head = { x: W / 2, y: H / 2 };
-
-  let frameCount = 0;
-
-  function update() {
-    // Lerp head toward mouse
-    head.x += (mouse.x - head.x) * SPEED;
-    head.y += (mouse.y - head.y) * SPEED;
-
-    // Add to trail if moved enough
-    const last = trail[0];
-    const dx = head.x - last.x;
-    const dy = head.y - last.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist >= MIN_DIST) {
-      trail.unshift({ x: head.x, y: head.y });
-      if (trail.length > MAX_LENGTH) trail.pop();
-      if (frameCount % 6 === 0) addSparks(head.x, head.y, '#00ffc8');
-    }
-
-    // Update sparks
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const s = sparks[i];
-      s.x += s.vx;
-      s.y += s.vy;
-      s.vx *= 0.92;
-      s.vy *= 0.92;
-      s.life -= 0.06;
-      if (s.life <= 0) sparks.splice(i, 1);
-    }
-
-    frameCount++;
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    // Draw sparks
-    for (const s of sparks) {
-      ctx.save();
-      ctx.globalAlpha = s.life * 0.8;
-      ctx.fillStyle = s.color;
-      ctx.shadowColor = s.color;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, 2.5 * s.life, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    if (trail.length < 2) return;
-
-    // Draw body using smooth path with varying thickness
-    const n = trail.length;
-
-    // Draw glow pass first
-    for (let i = 0; i < n - 1; i++) {
-      const t = i / (n - 1);
-      const seg = trail[i];
-      const next = trail[i + 1];
-      const r = SEGMENT_RADIUS * (1 - t * 0.7);
-      const color = bodyColor(t);
-      const alpha = 1 - t * 0.85;
-
-      ctx.save();
-      ctx.globalAlpha = alpha * 0.25;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = r * 2.8;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 20;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(seg.x, seg.y);
-      ctx.lineTo(next.x, next.y);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Draw main body
-    for (let i = 0; i < n - 1; i++) {
-      const t = i / (n - 1);
-      const seg = trail[i];
-      const next = trail[i + 1];
-      const r = SEGMENT_RADIUS * (1 - t * 0.7);
-      const color = bodyColor(t);
-      const alpha = 1 - t * 0.85;
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = r * 2;
-      ctx.lineCap = 'round';
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.moveTo(seg.x, seg.y);
-      ctx.lineTo(next.x, next.y);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Draw head circle
-    const hx = trail[0].x, hy = trail[0].y;
-    ctx.save();
-    ctx.shadowColor = '#00ffc8';
-    ctx.shadowBlur = 24;
-    ctx.fillStyle = '#00ffc8';
-    ctx.beginPath();
-    ctx.arc(hx, hy, SEGMENT_RADIUS + 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Inner bright dot
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(hx, hy, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Eyes on head (direction-aware)
-    if (n > 2) {
-      const dx = trail[0].x - trail[1].x;
-      const dy = trail[0].y - trail[1].y;
-      const angle = Math.atan2(dy, dx);
-      const eyeOffset = 5;
-      const perpX = -Math.sin(angle) * eyeOffset;
-      const perpY =  Math.cos(angle) * eyeOffset;
-      const fwdX  =  Math.cos(angle) * 4;
-      const fwdY  =  Math.sin(angle) * 4;
-
-      for (const sign of [-1, 1]) {
-        const ex = hx + sign * perpX + fwdX;
-        const ey = hy + sign * perpY + fwdY;
-        ctx.save();
-        ctx.fillStyle = '#060a0f';
-        ctx.beginPath();
-        ctx.arc(ex, ey, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        ctx.save();
-        ctx.fillStyle = '#ffe600';
-        ctx.shadowColor = '#ffe600';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(ex, ey, 1.4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    // Update length display
-    lenEl.textContent = trail.length;
-  }
-
-  function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-  }
-
-  loop();
+// Add default subjects
+addSubject();
+addSubject();
 </script>
+
 </body>
 </html>
